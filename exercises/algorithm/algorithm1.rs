@@ -2,7 +2,6 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -70,13 +69,51 @@ impl<T> LinkedList<T> {
         }
     }
 	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
+    where T: PartialOrd + Copy
 	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+		let mut output = Self::new();
+
+        let mut ptr_a = list_a.start;
+        let mut ptr_b = list_b.start;
+        let mut node_cnt = list_a.length + list_b.length;
+
+        while ptr_a.is_some() && ptr_b.is_some() {
+            let node_a = ptr_a.unwrap();
+            let node_b = ptr_b.unwrap();
+            let val_a = unsafe { (*node_a.as_ptr()).val };
+            let val_b = unsafe { (*node_b.as_ptr()).val };
+
+            let next_node = if val_a < val_b {
+                ptr_a = unsafe { (*node_a.as_ptr()).next };
+                node_a
+            } else {
+                ptr_b = unsafe { (*node_b.as_ptr()).next };
+                node_b
+            };
+            node_cnt -= 1;
+
+            match output.end {
+                None => output.start = Some(next_node),
+                Some(end_ptr) => unsafe { (*end_ptr.as_ptr()).next = Some(next_node) },
+            }
+            output.end = Some(next_node);
+            output.length += 1;
         }
+
+        let remaining = if ptr_a.is_some() {
+            ptr_a
+        } else {
+            ptr_b
+        };
+
+        match output.end {
+            None => output.start = remaining,
+            Some(end_ptr) => unsafe { (*end_ptr.as_ptr()).next = remaining },
+        }
+        output.end = remaining;
+        output.length += node_cnt;
+
+        output
 	}
 }
 
